@@ -36,6 +36,7 @@ $(document).ready(function() {
     // Once we have all of the HTML for the articles stored in our articlePanels array,
     // append them to the articlePanels container
     articleContainer.append(articlePanels);
+    console.log("This Array is pushing index.js (public)");
   }
 
   function createPanel(article) {
