@@ -28,7 +28,7 @@ app.use(
   })
 );
 app.use(express.static("/public/assets"));
-app.use(express.static("/public/assets/js"));
+app.use(express.static("/public/assets/js/index.js"));
 
 // Database configuration
 var databaseUrl = "propScrap_db";
@@ -52,6 +52,7 @@ db.on("error", function(error) {
 // Main route 
 app.get("/", function(req, res) {
   res.sendFile(path.join(__dirname, "/public/assets/index.html"));
+  // res.sendFile(path.join(__dirname, "/public/assets/js/index.js"));
 });
 
 // Retrieve data from the db
