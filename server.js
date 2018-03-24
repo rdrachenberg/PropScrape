@@ -1,57 +1,113 @@
-// *** Dependencies
-// =============================================================
+
+
+
+// Dependencies
 var express = require("express");
+var mongojs = require("mongojs");
 var bodyParser = require("body-parser");
-var session = require("express-session");
-// Requiring passport as we've configured it
-var passport = require("./config/passport");
-var methodOverride = require('method-override')
-
-var BreweryDb = require('brewerydb-node');
-var brewdb = new BreweryDb('a33c19bd014beef6a399d2811d6c62c3');
-
-
-// Sets up the Express App
-// =============================================================
+var logger = require("morgan");
+var mongoose = require("mongoose");
+var request = require("request")
+var cheerio = require('cheerio')
 var app = express();
-var PORT = process.env.PORT || 8080;
+var path = require("path");
 
-// Requiring our models for syncing
-var db = require("./models");
 
-// Sets up the Express app to handle data parsing
+var PORT = process.env.PORT || 3003;
+// **********************************************************************
+// Morgan setup.
+// :status token will be colored red for server error codes,
+// yellow for client error codes, 
+// cyan for redirection codes,
+// and uncolored for all other codes.
+app.use(logger("dev"));
+// Setup the app with body-parser and a static folder
+app.use(
+  bodyParser.urlencoded({
+    extended: false
+  })
+);
+app.use(express.static("/public"));
 
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
-// parse application/json
-app.use(bodyParser.json());
+// Database configuration
+var databaseUrl = "propScrap_db";
+var collections = ["scrapedArticles"];
 
-app.use(methodOverride('_method'))
+// If deployed, use the deployed database. Otherwise use the local mongoHeadlines database
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
 
-// Set Handlebars.
-var exphbs = require("express-handlebars");
+// Set mongoose to leverage built in JavaScript ES6 Promises
+// Connect to the Mongo DB
+mongoose.Promise = Promise;
+mongoose.connect(MONGODB_URI, {
+  // useMongoClient: true
+});
+// Hook mongojs configuration to the db variable
+var db = mongojs(databaseUrl, collections);
+db.on("error", function(error) {
+  console.log("Database Error:", error);
+});
 
-app.engine("handlebars", exphbs({ defaultLayout: "main" }));
-app.set("view engine", "handlebars");
+// Main route (simple Hello World Message)
+app.get("/", function(req, res) {
+  res.sendFile(path.join(__dirname, "/public/assets/index.html"));
+});
 
-// Static directory
-app.use(express.static("public"));
-// Use sessions to keep track the user's login status
-app.use(session({ secret: "keyboard cat", resave: true, saveUninitialized: true }));
-app.use(passport.initialize());
-app.use(passport.session());
+// Retrieve data from the db
+app.get("/all", function(req, res) {
+  // Find all results from the scrapedArticles collection in the db
+  db.scrapedArticles.find({}, function(error, found) {
+    // Throw any errors to the console
+    if (error) {
+      console.log(error);
+    }
+    // If there are no errors, send the data to the browser as json
+    else {
+      res.json(found);
+    }
+  });
+});
 
-// Routes
-// =============================================================
-require("./routes/html-routes.js")(app);
-require("./routes/user-api-routes.js")(app);
-require("./routes/post-api-routes.js")(app);
-require("./routes/beer-api-routes.js")(app);
+// Scrape data from one site and place it into the mongodb db
+app.get("/scrape", function(req, res) {
+  // Make a request for the news section of `ycombinator`
+  request("https://news.ycombinator.com/", function(error, response, html) {
+    // Load the html body from request into cheerio
+    var $ = cheerio.load(html);
+    // For each element with a "title" class
+    $(".title").each(function(i, element) {
+      // Save the text and href of each link enclosed in the current element
+      var title = $(element).children("a").text();
+      var link = $(element).children("a").attr("href");
 
-// Syncing our sequelize models and then starting our Express app
-// =============================================================
-db.sequelize.sync({ force: false }).then(function () {
-    app.listen(PORT, function () {
-        console.log("==> 🌎  Listening on port %s. Visit http://localhost:%s/ in your browser.", PORT, PORT);
+      // If this found element had both a title and a link
+      if (title && link) {
+        // Insert the data in the scrapedArticles db
+        db.scrapedArticles.insert({
+          title: title,
+          link: link
+        },
+        function(err, inserted) {
+          if (err) {
+            // Log the error if one is encountered during the query
+            console.log(err);
+          }
+          else {
+            // Otherwise, log the inserted data
+            console.log(inserted);
+          }
+        });
+      }
     });
+  });
+
+  // Send a "Scrape Complete" message to the browser
+  res.send("Scrape Complete");
+});
+
+
+
+// Listen on port 3003
+app.listen(PORT, function() {
+  console.log("🌎  Listening on port %s.  🌎 ", PORT);
 });
