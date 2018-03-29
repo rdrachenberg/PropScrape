@@ -5,3 +5,4 @@ config/config.json
 process.env
 .env
 ToDo.md
+snipps.js

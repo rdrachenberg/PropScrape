@@ -29,9 +29,12 @@
     "body-parser": "^1.18.2",
     "cheerio": "^1.0.0-rc.2",
     "cookie-session": "^2.0.0-beta.3",
+    "env": "0.0.2",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.15.6",
+    "jquery": "^3.3.1",
+    "jsdom": "^11.6.2",
     "method-override": "^2.3.10",
     "mongojs": "^2.5.0",
     "mongoose": "^5.0.11",
@@ -41,6 +44,7 @@
     "passport-google-oauth": "^1.0.0",
     "path": "^0.12.7",
     "request": "^2.85.0",
+    "require-env": "^0.2.1",
     "sequelize": "^4.37.4"
   },
   "devDependencies": {}
