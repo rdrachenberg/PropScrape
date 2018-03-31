@@ -1,4 +1,3 @@
-
 // ***********************************************************************
 // Dependencies
 // ***********************************************************************
@@ -11,9 +10,13 @@ var request = require("request")
 var cheerio = require('cheerio')
 var app = express();
 var path = require("path");
+var axios = require("axios");
+var http = require("http");
+var fn = require("fn");
 // ***********************************************************************
 // Require Models
 // ***********************************************************************
+
 var Note = require("./models/Note.js");
 var Article = require("./models/Headline.js");
 // ***********************************************************************
@@ -32,7 +35,6 @@ app.engine(
   })
 );
 app.set("view engine", "handlebars");
-
 // **********************************************************************
 // Morgan: 
 // red for server error codes,yellow for client error codes, cyan for redirection codes, and uncolored for all other codes.
@@ -54,13 +56,7 @@ app.use(express.static("/models"));
 var router = require("./controllers/fetch");
 var router = require("./controllers/headline");
 var router = require("./controllers/note");
-app.use("/", router);
-
-// require("./routes/api/index")(app);
-require("./public/assets/js/index")(app);
-// var mainJS = require("./public/assets/js/index.js");
-// app.use("/", mainJS);
-// app.use('/', router);
+app.use("/", router); 
 
 // ***********************************************************************
 // Database configuration
@@ -91,33 +87,6 @@ app.get("/", function(req, res) {
     };
     console.log(hbsObject);
     res.render("home", hbsObject);
-  });
-});
-// ***********************************************************************
-// Retrieve data from the db
-// ***********************************************************************
-app.get("/all", function(req, res) {
-  // Find all results from the scrapedArticles collection in the db
-  Article.find({}, function(error, found) {
-    // Throw any errors to the console
-    if (error) {
-      console.log(error);
-    }
-    // If there are no errors, send the data to the browser as json
-    else {
-      res.json(found);
-    }
-  });
-});
-// ***********************************************************************
-// Retrieve Saved data from the db
-// ***********************************************************************
-app.get("/saved", function(req, res) {
-  Article.find({"saved": true}).populate("notes").exec(function(error, articles) {
-    var hbsObject = {
-      article: articles
-    };
-    res.render("saved", hbsObject);
   });
 });
 // ***********************************************************************
@@ -154,12 +123,40 @@ app.get("/scrape", function(req, res) {
           console.log(doc);
         }
       });
-
     });
-        res.send("Scrape Complete");
+        // res.send("Scrape Complete");
+        res.redirect("/");
 
   });
 });
+// ***********************************************************************
+// Retrieve data from the db
+// ***********************************************************************
+app.get("/all", function(req, res) {
+  // Find all results from the scrapedArticles collection in the db
+  Article.find({}, function(error, found) {
+    // Throw any errors to the console
+    if (error) {
+      console.log(error);
+    }
+    // If there are no errors, send the data to the browser as json
+    else {
+      res.json(found);
+    }
+  });
+});
+// ***********************************************************************
+// Retrieve Saved data from the db
+// ***********************************************************************
+app.get("/saved", function(req, res) {
+  Article.find({"saved": true}).populate("notes").exec(function(error, articles) {
+    var hbsObject = {
+      article: articles
+    };
+    res.render("saved", hbsObject);
+  });
+});
+
 // ***********************************************************************
 // GET articles from the mongoDB
 // ***********************************************************************
