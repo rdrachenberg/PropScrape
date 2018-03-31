@@ -69,7 +69,7 @@ var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/propScrap_db";
 // Connect to the Mongo DB
 mongoose.Promise = Promise;
 mongoose.connect(MONGODB_URI, {
-  useMongoClient: true
+  // useMongoClient: true
 });
 // Hook mongojs configuration to the db variable
 var db = mongojs(databaseUrl, collections);
