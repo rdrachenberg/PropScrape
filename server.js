@@ -64,7 +64,7 @@ app.use("/", router);
 var databaseUrl = "propScrap_db";
 var collections = ["scrapedArticles"];
 // If deployed, use the deployed database. Otherwise use the local propScrap_db database
-var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/propScrap_db";
+var MONGODB_URI = "mongodb://heroku_3x2q20b8:rfijb0uio6c6utd06bfcds72ai@ds019916.mlab.com:19916/heroku_3x2q20b8" || "mongodb://localhost/propScrap_db";
 // Set mongoose to leverage built in JavaScript ES6 Promises
 // Connect to the Mongo DB
 mongoose.Promise = Promise;
